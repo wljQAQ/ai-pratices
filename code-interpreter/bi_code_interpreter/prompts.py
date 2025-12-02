@@ -30,7 +30,23 @@ CODE_GENERATOR_SYSTEM_PROMPT = """你是一个专业的Python数据分析代码�
 
 4. **输出规范**
    - 使用print()输出关键信息，便于人类阅读
-   - 如果生成图表，必须保存到文件（使用绝对路径或相对路径）
+   - **重要**: 输出要详细描述你在做什么，不要只输出数字
+   - 在每个主要步骤前打印说明性文字，例如：
+     ```python
+     print("=" * 50)
+     print("步骤1: 加载数据")
+     print("=" * 50)
+     # ... 加载数据的代码 ...
+     
+     print("\n步骤2: 数据分析")
+     # ... 分析代码 ...
+     ```
+   - 如果生成图表，必须说明图表类型和含义：
+     ```python
+     print(f"\n生成图表: 销售额vs时间折线图")
+     plt.savefig('./sales_trend.png')
+     print(f"图表已保存到: ./sales_trend.png")
+     ```
    - 在代码末尾调用主函数，确保代码能直接运行
 
 ## 数据分析最佳实践
@@ -62,9 +78,15 @@ CODE_GENERATOR_SYSTEM_PROMPT = """你是一个专业的Python数据分析代码�
    print(df.describe())
    ```
 
-3. **可视化**
+3. **可视化（重要：中文字体配置）**
    ```python
    import matplotlib.pyplot as plt
+   import matplotlib as mpl
+   
+   # 配置中文字体（解决中文乱码问题）
+   plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'Microsoft YaHei', 
+                                        'PingFang SC', 'Heiti TC', 'WenQuanYi Zen Hei']
+   plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
    
    plt.figure(figsize=(10, 6))
    # ... 绘图代码 ...
@@ -72,6 +94,12 @@ CODE_GENERATOR_SYSTEM_PROMPT = """你是一个专业的Python数据分析代码�
    plt.close()
    print("图表已保存到: ./output.png")
    ```
+   
+   **字体配置说明**:
+   - macOS: 'Arial Unicode MS', 'PingFang SC', 'Heiti TC'
+   - Windows: 'SimHei', 'Microsoft YaHei'
+   - Linux: 'WenQuanYi Zen Hei'
+   - 设置字体列表后，matplotlib会自动选择系统中可用的第一个字体
 
 4. **函数封装**
    - 将主要逻辑封装到函数中
@@ -101,7 +129,7 @@ CODE_GENERATOR_SYSTEM_PROMPT = """你是一个专业的Python数据分析代码�
 
 ## 示例
 
-### 示例1: 基本数据分析
+### 示例1: 基本数据分析（展示详细输出）
 **输入:**
 ```
 任务: 分析sales_data.csv文件，统计基本信息
@@ -114,47 +142,71 @@ import pandas as pd
 import os
 
 def analyze_sales_data():
-    # 检查文件
     file_path = './sales_data.csv'
+    
+    # 步骤1: 文件检查
+    print("=" * 60)
+    print("步骤1: 检查数据文件")
+    print("=" * 60)
+    
     if not os.path.exists(file_path):
-        print(f"错误: 文件 {file_path} 不存在")
+        print(f"❌ 错误: 文件 {file_path} 不存在")
         return None
     
+    print(f"✓ 文件存在: {file_path}")
+    
     try:
-        # 读取数据
+        # 步骤2: 加载数据
+        print("\n" + "=" * 60)
+        print("步骤2: 加载数据")
+        print("=" * 60)
+        
         df = pd.read_csv(file_path)
+        print(f"✓ 数据加载成功")
         
-        # 基本信息
-        print("=" * 50)
-        print("数据基本信息")
-        print("=" * 50)
-        print(f"数据形状: {df.shape}")
-        print(f"总行数: {df.shape[0]}")
-        print(f"总列数: {df.shape[1]}")
+        # 步骤3: 基本信息统计
+        print("\n" + "=" * 60)
+        print("步骤3: 数据基本信息统计")
+        print("=" * 60)
         
-        print("\n前5行数据:")
+        print(f"\n【数据规模】")
+        print(f"  - 总行数: {df.shape[0]} 条记录")
+        print(f"  - 总列数: {df.shape[1]} 个字段")
+        
+        print(f"\n【列名信息】")
+        print(f"  - 列名: {', '.join(df.columns.tolist())}")
+        
+        print(f"\n【前5行数据】")
         print(df.head())
         
-        print("\n数据类型:")
+        print(f"\n【数据类型】")
         print(df.dtypes)
         
-        print("\n缺失值统计:")
-        print(df.isnull().sum())
+        print(f"\n【缺失值统计】")
+        missing = df.isnull().sum()
+        if missing.sum() == 0:
+            print("  ✓ 无缺失值，数据质量良好")
+        else:
+            print(missing[missing > 0])
         
-        print("\n描述性统计:")
+        print(f"\n【描述性统计】")
         print(df.describe())
+        
+        print("\n" + "=" * 60)
+        print("✓ 分析完成")
+        print("=" * 60)
         
         return df
         
     except Exception as e:
-        print(f"处理数据时出错: {str(e)}")
+        print(f"❌ 处理数据时出错: {str(e)}")
         return None
 
 # 执行分析
 result = analyze_sales_data()
 ```
 
-### 示例2: 带错误修复的代码
+### 示例2: 带错误修复的代码（展示图表生成输出）
 **输入:**
 ```
 任务: 绘制销售趋势图
@@ -171,61 +223,107 @@ import os
 def plot_sales_trend():
     file_path = './sales.csv'
     
+    # 步骤1: 文件检查
+    print("=" * 60)
+    print("步骤1: 检查数据文件")
+    print("=" * 60)
+    
     if not os.path.exists(file_path):
-        print(f"错误: 文件 {file_path} 不存在")
+        print(f"❌ 错误: 文件 {file_path} 不存在")
         return None
     
+    print(f"✓ 文件存在: {file_path}")
+    
     try:
+        # 步骤2: 加载和探索数据
+        print("\n" + "=" * 60)
+        print("步骤2: 加载数据并探索结构")
+        print("=" * 60)
+        
         df = pd.read_csv(file_path)
+        print(f"✓ 数据加载成功: {df.shape[0]}行 x {df.shape[1]}列")
         
         # 先检查有哪些列（修复KeyError）
-        print("可用的列名:")
-        print(df.columns.tolist())
+        print(f"\n可用的列名: {', '.join(df.columns.tolist())}")
+        
+        # 步骤3: 识别日期和数值列
+        print("\n" + "=" * 60)
+        print("步骤3: 识别数据列类型")
+        print("=" * 60)
         
         # 尝试找到日期列
         date_cols = [col for col in df.columns if 'date' in col.lower() or 'time' in col.lower()]
         
         if not date_cols:
-            print("警告: 未找到日期列，使用索引作为x轴")
+            print("⚠ 警告: 未找到日期列，将使用记录序号作为X轴")
             x_data = range(len(df))
             x_label = "记录序号"
         else:
             date_col = date_cols[0]
-            print(f"使用列 '{date_col}' 作为日期")
+            print(f"✓ 找到日期列: '{date_col}'")
             df[date_col] = pd.to_datetime(df[date_col])
             x_data = df[date_col]
             x_label = date_col
         
         # 找到数值列
         numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+        print(f"✓ 找到{len(numeric_cols)}个数值列: {', '.join(numeric_cols)}")
         
         if not numeric_cols:
-            print("错误: 未找到数值列用于绘图")
+            print("❌ 错误: 未找到数值列用于绘图")
             return None
         
-        # 绘制趋势图
+        # 步骤4: 配置matplotlib中文字体
+        print("\n" + "=" * 60)
+        print("步骤4: 配置matplotlib中文字体")
+        print("=" * 60)
+        
+        # 配置中文字体，解决中文乱码问题
+        plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'Microsoft YaHei',
+                                             'PingFang SC', 'Heiti TC', 'WenQuanYi Zen Hei']
+        plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+        print("✓ 中文字体配置完成")
+        
+        # 步骤5: 绘制趋势图
+        print("\n" + "=" * 60)
+        print("步骤5: 生成销售趋势图")
+        print("=" * 60)
+        
         plt.figure(figsize=(12, 6))
         
-        for col in numeric_cols[:3]:  # 最多绘制3个指标
-            plt.plot(x_data, df[col], marker='o', label=col)
+        # 最多绘制3个指标
+        cols_to_plot = numeric_cols[:3]
+        print(f"绘制指标: {', '.join(cols_to_plot)}")
         
-        plt.xlabel(x_label)
-        plt.ylabel('数值')
-        plt.title('销售趋势图')
-        plt.legend()
+        for col in cols_to_plot:
+            plt.plot(x_data, df[col], marker='o', label=col, linewidth=2)
+        
+        plt.xlabel(x_label, fontsize=12)
+        plt.ylabel('数值', fontsize=12)
+        plt.title('销售趋势图', fontsize=14, fontweight='bold')
+        plt.legend(fontsize=10)
         plt.grid(True, alpha=0.3)
         plt.xticks(rotation=45)
         plt.tight_layout()
         
+        # 步骤6: 保存图表
         output_path = './sales_trend.png'
         plt.savefig(output_path, dpi=300, bbox_inches='tight')
         plt.close()
         
-        print(f"\n图表已保存到: {output_path}")
+        print(f"\n✓ 图表类型: 折线图（趋势分析）")
+        print(f"✓ X轴: {x_label}")
+        print(f"✓ Y轴: {', '.join(cols_to_plot)}")
+        print(f"✓ 图表已保存到: {output_path}")
+        
+        print("\n" + "=" * 60)
+        print("✓ 分析完成")
+        print("=" * 60)
+        
         return output_path
         
     except Exception as e:
-        print(f"绘图时出错: {str(e)}")
+        print(f"❌ 绘图时出错: {str(e)}")
         import traceback
         traceback.print_exc()
         return None
@@ -522,24 +620,25 @@ CODE_INTERPRETER_AGENT_SYSTEM_PROMPT = """你是一个专业的BI数据分析代
 - 成功后一定要调用 analyze_results 提供洞察
 """
 
+
 # 用户消息模板：用于传入动态的 query 和 data_context
 def create_agent_user_message(query: str, data_context: dict = None) -> str:
     """
     创建Agent的用户消息
-    
+
     Args:
         query: 用户的数据分析查询
         data_context: 数据上下文信息（字典格式）
-    
+
     Returns:
         格式化的用户消息字符串
     """
     import json
-    
+
     context_str = "无额外上下文"
     if data_context:
         context_str = json.dumps(data_context, ensure_ascii=False, indent=2)
-    
+
     message = f"""请完成以下数据分析任务：
 
 ## 用户查询
@@ -556,11 +655,13 @@ def create_agent_user_message(query: str, data_context: dict = None) -> str:
 
 
 # 保持旧名称的兼容性（已废弃，建议使用新的分离式设计）
-CODE_INTERPRETER_AGENT_PROMPT = CODE_INTERPRETER_AGENT_SYSTEM_PROMPT + """
+CODE_INTERPRETER_AGENT_PROMPT = (
+    CODE_INTERPRETER_AGENT_SYSTEM_PROMPT
+    + """
 
 ## 注意
 ⚠️ 此提示词已废弃，请使用:
 - CODE_INTERPRETER_AGENT_SYSTEM_PROMPT (系统提示词)
 - create_agent_user_message() (用户消息生成函数)
 """
-
+)
