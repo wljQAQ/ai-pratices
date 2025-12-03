@@ -10,6 +10,7 @@ dependencies = [
     "langchain-community>=0.4.1",
     "langchain-openai>=1.1.0",
     "langchain-tavily>=0.2.13",
+    "langgraph>=1.0.4",
     "matplotlib>=3.10.7",
     "pandas>=2.3.3",
     "pydantic>=2.12.5",
